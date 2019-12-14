@@ -58,7 +58,8 @@ object ArrDelayPredictor {
 
       mlModelSelected match {
         case "lr" =>
-          LinearRegression.start(processedDatasetsDF)
+          println("do linear regression")
+        //LinearRegression.start(processedDatasetsDF)
       }
 
       // TODO: Show accuracy of the ML chosen
