@@ -1,3 +1,5 @@
+import java.util.NoSuchElementException
+
 import mlmodels.LinearRegression
 import org.apache.spark.sql.SparkSession
 import preprocess.PreProcessDataset
@@ -8,11 +10,15 @@ import preprocess.PreProcessDataset
 object ArrDelayPredictor {
   def main(args: Array[String]) {
     try {
-      // An error will be thrown if the env variable does not exist
-      val DATASET_FOLDER_PATH: String = sys.env("DATASET_FOLDER_PATH");
+      // An error will be thrown if the arguments required do not exist
+      if (args.length == 0) {
+        throw new NoSuchElementException()
+      }
+      val datasetFolderPath: String = args(0);
 
       // Variable to specify if the predictor should be interactive. (Allowing the user to select ML models...)
-      val interactiveMode = true;
+      val interactiveMode =
+        if (args.length > 1 && args(1) == "true") true else false;
 
       val spark = SparkSession.builder
         .appName("Flight Arrival Prediction")
@@ -24,7 +30,7 @@ object ArrDelayPredictor {
         .format("csv")
         .option("inferSchema", "true")
         .option("header", "true")
-        .load(DATASET_FOLDER_PATH + "/1996.csv")
+        .load(datasetFolderPath + "/1996.csv")
 
       // Preprocess data
       val processedDatasetsDF = PreProcessDataset.start(datasetsDF);
@@ -61,7 +67,7 @@ object ArrDelayPredictor {
     } catch {
       case _: NoSuchElementException => {
         println(
-          "Exception: You must provide the environment variable DATASET_FOLDER_PATH with the path to the datasets."
+          "Exception: You must provide the dataset folder path as the first argument of the app. Optionally, a second argument for interactive app can be passed."
         )
       }
     }
