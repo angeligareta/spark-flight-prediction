@@ -6,14 +6,18 @@ import org.apache.spark.ml.feature.{
   StringIndexer,
   VectorAssembler
 }
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.ml.param.shared.HasHandleInvalid
+import org.apache.spark.ml.util.DefaultParamsWritable
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
   * Object with methods to preprocess data
   */
 object PreProcessDataset {
 
-  def getFeaturesPipelineStages(dataset: DataFrame): PipelineStage = {
+  def getFeaturesPipelineStages(
+    dataset: DataFrame
+  ): Array[PipelineStage with HasHandleInvalid with DefaultParamsWritable] = {
     val uniqueCarrierIndexer =
       new StringIndexer()
         .setInputCol("UniqueCarrier")
@@ -86,7 +90,7 @@ object PreProcessDataset {
     );
   }
 
-  def start(dataset: DataFrame): DataFrame = {
+  def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
     // Drop columns that the exercise required.
     val columnsToDrop = Array(
       "ArrTime",
@@ -101,26 +105,19 @@ object PreProcessDataset {
       "LateAircraftDelay"
     );
     var preProcessDataset = dataset.drop(columnsToDrop: _*);
-    preProcessDataset.show(10)
 
-    val df2 = preProcessDataset.selectExpr(
-      "cast(year as int) Year",
-      "Month",
-      "DayofMonth",
-      "DayOfWeek",
-      "DepTime",
-      "CRSDepTime",
-      "CRSArrTime",
-      "FlightNum",
-      "CRSElapsedTime",
-      "ArrDelay",
-      "DepDelay"
-    )
+    // Import implicits to use $
+    import spark.implicits._
 
-    pipeline.fit(dataset).transform(dataset).show(10)
+    // Cast columns that are string to correct format
+    preProcessDataset = preProcessDataset
+      .withColumn("DepTime", $"DepTime" cast "Int")
+      .withColumn("CRSElapsedTime", $"CRSElapsedTime" cast "Int")
+      .withColumn("ArrDelay", $"ArrDelay" cast "Int")
+      .withColumn("DepDelay", $"DepDelay" cast "Int")
+      .withColumn("DepDelay", $"DepDelay" cast "Int")
 
-    // TODO: More preprocessing
-
+    // TODO: More preProcessing
     return preProcessDataset
   }
 }
