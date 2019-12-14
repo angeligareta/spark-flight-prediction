@@ -1,4 +1,4 @@
-package preprocessing
+package preprocess
 
 import org.apache.spark.sql.DataFrame
 

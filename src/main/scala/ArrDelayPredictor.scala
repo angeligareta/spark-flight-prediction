@@ -1,5 +1,6 @@
+import mlmodels.LinearRegression
 import org.apache.spark.sql.SparkSession
-import preprocessing.PreProcessDataset
+import preprocess.PreProcessDataset
 
 /**
   * Predictor for ArrDelay target variable in the flights dataset.
