@@ -48,7 +48,6 @@ object PreProcessDataset {
     val encoder = new OneHotEncoderEstimator()
       .setInputCols(
         Array(
-          uniqueCarrierIndexer.getOutputCol,
           tailNumIndexer.getOutputCol,
           originIndexer.getOutputCol,
           destIndexer.getOutputCol
@@ -74,13 +73,13 @@ object PreProcessDataset {
           "DayOfWeek",
           "DepTime",
           "CRSDepTime",
-          "UniqueCarrierVec",
+          "UniqueCarrierIndexed",
           "FlightNum",
-          "TailNumVec",
+          "TailNumIndexed",
           "DepDelay",
           "Distance",
-          "OriginVec",
-          "DestVec"
+          "OriginIndexed",
+          "DestIndexed"
           //"CancellationCodeVec"
         )
       )
@@ -92,7 +91,7 @@ object PreProcessDataset {
       originIndexer,
       destIndexer,
       //cancellationCodeIndexer,
-      encoder,
+      // encoder,
       features
     );
   }

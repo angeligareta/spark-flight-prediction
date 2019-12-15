@@ -38,7 +38,7 @@ object ArrDelayPredictor {
 
       // Execute ML model by choice of user
       val supportedMlModels = Array("lr");
-      var mlModelSelected = if (interactiveMode) "" else "dt";
+      var mlModelSelected = if (interactiveMode) "" else "lr";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {
@@ -60,8 +60,9 @@ object ArrDelayPredictor {
       mlModelSelected match {
         case "lr" =>
           println("do linear regression")
-        //LinearRegression.start(processedDatasetsDF)
+          LinearRegression.start(processedDatasetsDF)
         case "dt" =>
+          println("Do decision tree")
           DecisionTreeModel.start(processedDatasetsDF)
       }
 
