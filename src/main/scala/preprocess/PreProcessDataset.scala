@@ -8,6 +8,7 @@ import org.apache.spark.ml.feature.{
 }
 import org.apache.spark.ml.param.shared.HasHandleInvalid
 import org.apache.spark.ml.util.DefaultParamsWritable
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -95,6 +96,31 @@ object PreProcessDataset {
     );
   }
 
+  def handleNAValues(preProcessDataset: DataFrame): Unit = {
+    preProcessDataset.columns.foreach(column => {
+      var columnType = "StringType"
+      preProcessDataset.dtypes.foreach(tuple => {
+        if (tuple._1 == column) {
+          columnType = tuple._2
+        }
+      })
+
+      println(s"Column ${column} with type ${columnType}")
+      columnType match {
+        case "IntegerType" => {
+          val columnMean = preProcessDataset.agg(avg(column)).first().getInt(0)
+          println(s"Mean is ${columnMean}")
+          preProcessDataset.na.fill(columnMean, Array(column))
+        }
+        case "StringType" => {
+          val categoricalColumnMean = s"No_${column}"
+          println(s"Categorical Mean is ${categoricalColumnMean}")
+          preProcessDataset.na.fill(categoricalColumnMean, Array(column))
+        }
+      }
+    })
+  }
+
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
     // Drop columns that the exercise required.
     val columnsToDrop = Array(
@@ -123,8 +149,7 @@ object PreProcessDataset {
       .withColumn("DepDelay", $"DepDelay" cast "Int")
       .withColumn("DepDelay", $"DepDelay" cast "Int")
 
-    // FIXME: Do not just drop na
-    preProcessDataset = preProcessDataset.na.drop()
+    handleNAValues(preProcessDataset);
 
     // TODO: More preProcessing
     return preProcessDataset

@@ -1,8 +1,8 @@
 import java.util.NoSuchElementException
 
 import mlmodels.{
-  LinearRegressionCustomModel,
   DecisionTreeModel,
+  LinearRegressionCustomModel,
   RandomForestModel
 }
 import org.apache.spark.sql.SparkSession
@@ -34,15 +34,15 @@ object ArrDelayPredictor {
         .format("csv")
         .option("inferSchema", "true")
         .option("header", "true")
-        .load(datasetFolderPath + "/1996.csv")
+        .load(datasetFolderPath + "/1996_short.csv")
 
       // Preprocess data
       val processedDatasetsDF = PreProcessDataset.start(spark, datasetsDF);
       processedDatasetsDF.show(10);
 
       // Execute ML model by choice of user
-      val supportedMlModels = Array("lr, dt, glr");
-      var mlModelSelected = if (interactiveMode) "" else "lr";
+      val supportedMlModels = Array("lr, dt, rf");
+      var mlModelSelected = if (interactiveMode) "" else "rf";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {
