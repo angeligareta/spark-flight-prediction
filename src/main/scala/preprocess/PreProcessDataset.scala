@@ -85,7 +85,7 @@ object PreProcessDataset {
 
       println(s"Column ${column} with type ${columnType}")
       columnType match {
-        case "IntegerType" => {
+        case "DoubleType" => {
           val columnMean =
             preProcessDataset.agg(avg(column)).first().getDouble(0)
           println(s"Mean is ${columnMean}")
@@ -109,7 +109,7 @@ object PreProcessDataset {
 
     continuousVariables.foreach(continuousVariable => {
       preProcessDataset = preProcessDataset
-        .withColumn(continuousVariable, $"${continuousVariable}" cast "Int")
+        .withColumn(continuousVariable, $"${continuousVariable}" cast "Double")
     })
 
     println(preProcessDataset.dtypes.mkString(", "))

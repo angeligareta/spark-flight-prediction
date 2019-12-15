@@ -32,7 +32,6 @@ object ArrDelayPredictor {
       // Read dataset dataFrame
       val datasetsDF = spark.read
         .format("csv")
-        .option("inferSchema", "true")
         .option("header", "true")
         .load(datasetFolderPath + "/1996_short.csv")
 
