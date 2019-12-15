@@ -1,6 +1,6 @@
 import java.util.NoSuchElementException
 
-import mlmodels.{DecisionTreeModel, LinearRegression}
+import mlmodels.{DecisionTreeModel, RandomForestModel}
 import org.apache.spark.sql.SparkSession
 import preprocess.PreProcessDataset
 
@@ -37,8 +37,8 @@ object ArrDelayPredictor {
       processedDatasetsDF.show(10);
 
       // Execute ML model by choice of user
-      val supportedMlModels = Array("lr");
-      var mlModelSelected = if (interactiveMode) "" else "lr";
+      val supportedMlModels = Array("lr, dt, glr");
+      var mlModelSelected = if (interactiveMode) "" else "glr";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {
@@ -64,6 +64,7 @@ object ArrDelayPredictor {
         case "dt" =>
           println("Do decision tree")
           DecisionTreeModel.start(processedDatasetsDF)
+        case "glr" => RandomForestModel.start(processedDatasetsDF)
       }
 
       // TODO: Show accuracy of the ML chosen
