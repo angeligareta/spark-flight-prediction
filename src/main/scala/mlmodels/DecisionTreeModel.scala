@@ -1,45 +1,66 @@
 package mlmodels
 
-import org.apache.spark.mllib.tree.DecisionTree
-import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.ml.regression.{
+  DecisionTreeRegressionModel,
+  DecisionTreeRegressor
+}
 import org.apache.spark.sql.DataFrame
+import preprocess.PreProcessDataset
 
 object DecisionTreeModel {
   def start(dataset: DataFrame): Unit = {
-    val datasetRDD = dataset.rdd.map(
-      row =>
-        LabeledPoint(
-          row.getAs[Double]("ArrDelay"),
-          row.getAs[org.apache.spark.mllib.linalg.Vector]("ArrTime")
-      )
-    )
-    // Split the data into training and test sets (30% held out for testing)
-    val splits = datasetRDD.randomSplit(Array(0.7, 0.3))
-    val (trainingData, testData) = (splits(0), splits(1))
+    val modelPath = "./models/decision_tree";
 
     // Train a DecisionTree model.
-    //  Empty categoricalFeaturesInfo indicates all features are continuous.
-    val categoricalFeaturesInfo = Map[Int, Int]()
-    val impurity = "variance"
-    val maxDepth = 5
-    val maxBins = 32
+    var dt = new DecisionTreeRegressor()
+      .setLabelCol("ArrDelay")
+      .setFeaturesCol("features")
 
-    val model = DecisionTree.trainRegressor(
-      trainingData,
-      categoricalFeaturesInfo,
-      impurity,
-      maxDepth,
-      maxBins
-    )
+    //    try {
+    //      var dt = DecisionTreeRegressor.load(modelPath);
+    //
+    //    }
+    //    catch {
+    //      case x: InvalidInputException {
+    //
+    //    }
+    //    }
 
-    // Evaluate model on test instances and compute test error
-    val labelsAndPredictions = testData.map { point =>
-      val prediction = model.predict(point.features)
-      (point.label, prediction)
-    }
-    val testMSE =
-      labelsAndPredictions.map { case (v, p) => math.pow(v - p, 2) }.mean()
-    println(s"Test Mean Squared Error = $testMSE")
-    println(s"Learned regression tree model:\n ${model.toDebugString}")
+    // Split the data into training and test sets (30% held out for testing).
+    val Array(trainingData, testData) = dataset.randomSplit(Array(0.7, 0.3))
+
+    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages(dataset)
+
+    // Chain indexer and tree in a Pipeline.
+    val pipeline = new Pipeline()
+      .setStages(pipelineStages ++ Array(dt))
+
+    // Train model. This also runs the indexer.
+    val model = pipeline.fit(trainingData)
+
+    // Make predictions.
+    val predictions = model.transform(testData)
+
+    // Select example rows to display.
+    predictions.select("prediction", "ArrDelay", "features").show(5)
+
+    // Select (prediction, true label) and compute test error
+    val evaluator = new RegressionEvaluator()
+      .setLabelCol("ArrDelay")
+      .setPredictionCol("prediction")
+      .setMetricName("rmse")
+
+    val rmse = evaluator.evaluate(predictions)
+    println("Root Mean Squared Error (RMSE) on test data = " + rmse)
+
+    val treeModel: DecisionTreeRegressionModel = model
+      .stages(pipelineStages.length)
+      .asInstanceOf[DecisionTreeRegressionModel]
+    println("Learned regression tree model:\n" + treeModel.toDebugString)
+
+    println("Saving model")
+    treeModel.save(modelPath);
   }
 }

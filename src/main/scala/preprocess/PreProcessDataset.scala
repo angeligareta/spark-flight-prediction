@@ -1,6 +1,6 @@
 package preprocess
 
-import org.apache.spark.ml.{Pipeline, PipelineStage}
+import org.apache.spark.ml.PipelineStage
 import org.apache.spark.ml.feature.{
   OneHotEncoderEstimator,
   StringIndexer,
@@ -14,7 +14,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   * Object with methods to preprocess data
   */
 object PreProcessDataset {
-
   def getFeaturesPipelineStages(
     dataset: DataFrame
   ): Array[PipelineStage with HasHandleInvalid with DefaultParamsWritable] = {
@@ -22,21 +21,29 @@ object PreProcessDataset {
       new StringIndexer()
         .setInputCol("UniqueCarrier")
         .setOutputCol("UniqueCarrierIndexed")
+        .setHandleInvalid("skip")
 
     val tailNumIndexer =
       new StringIndexer()
-        .setInputCol("TailNumber")
+        .setInputCol("TailNum")
         .setOutputCol("TailNumIndexed")
+        .setHandleInvalid("skip")
 
     val originIndexer =
-      new StringIndexer().setInputCol("Origin").setOutputCol("OriginIndexed");
+      new StringIndexer()
+        .setInputCol("Origin")
+        .setOutputCol("OriginIndexed")
+        .setHandleInvalid("skip")
 
     val destIndexer =
-      new StringIndexer().setInputCol("Dest").setOutputCol("DestIndexed")
+      new StringIndexer()
+        .setInputCol("Dest")
+        .setOutputCol("DestIndexed")
+        .setHandleInvalid("skip")
 
-    val cancellationCodeIndexer = new StringIndexer()
+    /*val cancellationCodeIndexer = new StringIndexer()
       .setInputCol("CancellationCode")
-      .setOutputCol("CancellationCodeIndexed")
+      .setOutputCol("CancellationCodeIndexed")*/
 
     val encoder = new OneHotEncoderEstimator()
       .setInputCols(
@@ -44,8 +51,8 @@ object PreProcessDataset {
           uniqueCarrierIndexer.getOutputCol,
           tailNumIndexer.getOutputCol,
           originIndexer.getOutputCol,
-          destIndexer.getOutputCol,
-          cancellationCodeIndexer.getOutputCol
+          destIndexer.getOutputCol
+          //cancellationCodeIndexer.getOutputCol
         )
       )
       .setOutputCols(
@@ -53,8 +60,8 @@ object PreProcessDataset {
           "UniqueCarrierVec",
           "TailNumVec",
           "OriginVec",
-          "DestVec",
-          "CancellationCodeVec"
+          "DestVec"
+          //"CancellationCodeVec"
         )
       )
 
@@ -73,8 +80,8 @@ object PreProcessDataset {
           "DepDelay",
           "Distance",
           "OriginVec",
-          "DestVec",
-          "CancellationCodeVec"
+          "DestVec"
+          //"CancellationCodeVec"
         )
       )
       .setOutputCol("features")
@@ -84,7 +91,7 @@ object PreProcessDataset {
       tailNumIndexer,
       originIndexer,
       destIndexer,
-      cancellationCodeIndexer,
+      //cancellationCodeIndexer,
       encoder,
       features
     );
@@ -102,7 +109,8 @@ object PreProcessDataset {
       "WeatherDelay",
       "NASDelay",
       "SecurityDelay",
-      "LateAircraftDelay"
+      "LateAircraftDelay",
+      "CancellationCode" // All NA in 1996
     );
     var preProcessDataset = dataset.drop(columnsToDrop: _*);
 
@@ -116,6 +124,9 @@ object PreProcessDataset {
       .withColumn("ArrDelay", $"ArrDelay" cast "Int")
       .withColumn("DepDelay", $"DepDelay" cast "Int")
       .withColumn("DepDelay", $"DepDelay" cast "Int")
+
+    // FIXME: Do not just drop na
+    preProcessDataset = preProcessDataset.na.drop()
 
     // TODO: More preProcessing
     return preProcessDataset
