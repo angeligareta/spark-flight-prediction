@@ -6,8 +6,6 @@ import org.apache.spark.ml.feature.{
   StringIndexer,
   VectorAssembler
 }
-import org.apache.spark.ml.param.shared.HasHandleInvalid
-import org.apache.spark.ml.util.DefaultParamsWritable
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -15,85 +13,65 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   * Object with methods to preprocess data
   */
 object PreProcessDataset {
-  def getFeaturesPipelineStages()
-    : Array[PipelineStage with HasHandleInvalid with DefaultParamsWritable] = {
-    val uniqueCarrierIndexer =
-      new StringIndexer()
-        .setInputCol("UniqueCarrier")
-        .setOutputCol("UniqueCarrierIndexed")
-        .setHandleInvalid("skip")
+  val variablesToDrop = Array(
+    "ArrTime",
+    "ActualElapsedTime",
+    "AirTime",
+    "TaxiIn",
+    "Diverted",
+    "CarrierDelay",
+    "WeatherDelay",
+    "NASDelay",
+    "SecurityDelay",
+    "LateAircraftDelay"
+  );
 
-    val tailNumIndexer =
-      new StringIndexer()
-        .setInputCol("TailNum")
-        .setOutputCol("TailNumIndexed")
-        .setHandleInvalid("skip")
+  val categoricalVariables =
+    Array(
+      //"Year", if we have only one year could not be categorical
+      "Month",
+      "DayofMonth",
+      "DayOfWeek",
+      "UniqueCarrier",
+      "FlightNum",
+      "TailNum",
+      "Origin",
+      "Dest"
+      // "Cancelled" canceled plane does not affect arrival delay
+      //"CancellationCode"
+    )
 
-    val originIndexer =
-      new StringIndexer()
-        .setInputCol("Origin")
-        .setOutputCol("OriginIndexed")
-        .setHandleInvalid("skip")
+  val continuousVariables = Array(
+    "Year",
+    "DepTime",
+    "CRSDepTime",
+    "CRSArrTime",
+    "CRSElapsedTime",
+    "DepDelay",
+    "Distance",
+    "TaxiOut"
+  );
+  val indexedCategoricalVariables = categoricalVariables.map(v => s"${v}Index")
+  val encodedCategoricalVariables = categoricalVariables.map(v => s"${v}Vec");
+  val featuresVariables = encodedCategoricalVariables ++ continuousVariables
 
-    val destIndexer =
-      new StringIndexer()
-        .setInputCol("Dest")
-        .setOutputCol("DestIndexed")
-        .setHandleInvalid("skip")
-
-    /*val cancellationCodeIndexer = new StringIndexer()
-      .setInputCol("CancellationCode")
-      .setOutputCol("CancellationCodeIndexed")*/
-
-    val encoder = new OneHotEncoderEstimator()
-      .setInputCols(
-        Array(
-          tailNumIndexer.getOutputCol,
-          originIndexer.getOutputCol,
-          destIndexer.getOutputCol
-          //cancellationCodeIndexer.getOutputCol
-        )
+  def getFeaturesPipelineStages(): Array[PipelineStage] = {
+    val categoricalIndexers = categoricalVariables
+      .map(
+        v =>
+          new StringIndexer()
+            .setInputCol(v)
+            .setOutputCol(v + "Index")
+            .setHandleInvalid("skip")
       )
-      .setOutputCols(
-        Array(
-          "UniqueCarrierVec",
-          "TailNumVec",
-          "OriginVec",
-          "DestVec"
-          //"CancellationCodeVec"
-        )
-      )
-
-    val features = new VectorAssembler()
-      .setInputCols(
-        Array(
-          "Year",
-          "Month",
-          "DayofMonth",
-          "DayOfWeek",
-          "DepTime",
-          "CRSDepTime",
-          "UniqueCarrierIndexed",
-          "FlightNum",
-          "TailNumIndexed",
-          "DepDelay",
-          "Distance",
-          "OriginIndexed",
-          "DestIndexed"
-          //"CancellationCodeVec"
-        )
-      )
+    val categoricalEncoder = new OneHotEncoderEstimator()
+      .setInputCols(indexedCategoricalVariables)
+      .setOutputCols(encodedCategoricalVariables)
+    val assembler = new VectorAssembler()
+      .setInputCols(featuresVariables)
       .setOutputCol("features")
 
-    return Array(
-      uniqueCarrierIndexer,
-      tailNumIndexer,
-      originIndexer,
-      destIndexer,
-      //cancellationCodeIndexer,
-      // encoder,
-      features
-    );
+    categoricalIndexers ++ Array(categoricalEncoder) ++ Array(assembler)
   }
 
   def handleNAValues(preProcessDataset: DataFrame): Unit = {
@@ -108,7 +86,8 @@ object PreProcessDataset {
       println(s"Column ${column} with type ${columnType}")
       columnType match {
         case "IntegerType" => {
-          val columnMean = preProcessDataset.agg(avg(column)).first().getInt(0)
+          val columnMean =
+            preProcessDataset.agg(avg(column)).first().getDouble(0)
           println(s"Mean is ${columnMean}")
           preProcessDataset.na.fill(columnMean, Array(column))
         }
@@ -123,35 +102,19 @@ object PreProcessDataset {
 
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
     // Drop columns that the exercise required.
-    val columnsToDrop = Array(
-      "ArrTime",
-      "ActualElapsedTime",
-      "AirTime",
-      "TaxiIn",
-      "Diverted",
-      "CarrierDelay",
-      "WeatherDelay",
-      "NASDelay",
-      "SecurityDelay",
-      "LateAircraftDelay",
-      "CancellationCode" // All NA in 1996
-    );
-    var preProcessDataset = dataset.drop(columnsToDrop: _*);
+    var preProcessDataset = dataset.drop(variablesToDrop: _*);
 
     // Import implicits to use $
     import spark.implicits._
 
-    // Cast columns that are string to correct format
-    preProcessDataset = preProcessDataset
-      .withColumn("DepTime", $"DepTime" cast "Int")
-      .withColumn("CRSElapsedTime", $"CRSElapsedTime" cast "Int")
-      .withColumn("ArrDelay", $"ArrDelay" cast "Int")
-      .withColumn("DepDelay", $"DepDelay" cast "Int")
-      .withColumn("DepDelay", $"DepDelay" cast "Int")
+    continuousVariables.foreach(continuousVariable => {
+      preProcessDataset = preProcessDataset
+        .withColumn(continuousVariable, $"${continuousVariable}" cast "Int")
+    })
 
+    println(preProcessDataset.dtypes.mkString(", "))
     handleNAValues(preProcessDataset);
 
-    // TODO: More preProcessing
-    return preProcessDataset
+    preProcessDataset
   }
 }
