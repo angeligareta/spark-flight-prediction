@@ -13,7 +13,7 @@ object DecisionTreeModel {
   def start(dataset: DataFrame): Unit = {
     // Split the data into training and test sets (30% held out for testing).
     val Array(trainingData, testData) = dataset.randomSplit(Array(0.7, 0.3))
-    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages(dataset)
+    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
 
     // Train a DecisionTree model.
     val dt = new DecisionTreeRegressor()
