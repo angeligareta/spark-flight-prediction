@@ -60,8 +60,9 @@ object ArrDelayPredictor {
       mlModelSelected match {
         case "lr" =>
           println("do linear regression")
-        //LinearRegression.start(processedDatasetsDF)
+          LinearRegression.start(processedDatasetsDF)
         case "dt" =>
+          println("Do decision tree")
           DecisionTreeModel.start(processedDatasetsDF)
         case "glr" => RandomForestModel.start(processedDatasetsDF)
       }
