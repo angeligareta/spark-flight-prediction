@@ -1,14 +1,10 @@
 import java.util.NoSuchElementException
 
-<<<<<<< HEAD
 import mlmodels.{
   LinearRegressionCustomModel,
   DecisionTreeModel,
   RandomForestModel
 }
-=======
-import mlmodels.{DecisionTreeModel, LinearRegression, RandomForestModel}
->>>>>>> b370e340626eeed094ab8b79cbc9f9e38c3941fd
 import org.apache.spark.sql.SparkSession
 import preprocess.PreProcessDataset
 
