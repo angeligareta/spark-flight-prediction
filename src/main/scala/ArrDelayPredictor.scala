@@ -1,10 +1,14 @@
 import java.util.NoSuchElementException
 
+<<<<<<< HEAD
 import mlmodels.{
   LinearRegressionCustomModel,
   DecisionTreeModel,
   RandomForestModel
 }
+=======
+import mlmodels.{DecisionTreeModel, LinearRegression, RandomForestModel}
+>>>>>>> b370e340626eeed094ab8b79cbc9f9e38c3941fd
 import org.apache.spark.sql.SparkSession
 import preprocess.PreProcessDataset
 
@@ -62,11 +66,19 @@ object ArrDelayPredictor {
       }
 
       mlModelSelected match {
-        case "lr" =>
+
+        case "lr" => {
+          println("Linear regression")
           LinearRegressionCustomModel.start(processedDatasetsDF)
-        case "dt" =>
+        }
+        case "dt" => {
+          println("Decision tree")
           DecisionTreeModel.start(processedDatasetsDF)
-        case "glr" => RandomForestModel.start(processedDatasetsDF)
+        }
+        case "rf" => {
+          println("Decision tree")
+          RandomForestModel.start(processedDatasetsDF)
+        }
       }
 
       // TODO: Show accuracy of the ML chosen
