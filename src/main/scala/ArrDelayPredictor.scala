@@ -67,7 +67,7 @@ object ArrDelayPredictor {
           DecisionTreeModel.start(processedDatasetsDF)
         }
         case "rf" => {
-          println("Decision tree")
+          println("Random Forest")
           RandomForestModel.start(processedDatasetsDF)
         }
       }

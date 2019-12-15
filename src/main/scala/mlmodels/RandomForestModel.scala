@@ -18,6 +18,7 @@ object RandomForestModel {
     val rf = new RandomForestRegressor()
       .setLabelCol("ArrDelay")
       .setFeaturesCol("features")
+      .setMaxBins(3500) // At least as large as all categorical variables
 
     // Pipeline to prepare the data before training the model
     val pipeline = new Pipeline()
@@ -31,8 +32,9 @@ object RandomForestModel {
 
     // We use a ParamGridBuilder to construct a grid of parameters to search over.
     val paramGrid = new ParamGridBuilder()
-      .addGrid(rf.numTrees, Array(10, 100, 200))
-      .addGrid(rf.maxDepth, Array(10, 30, 50))
+      .addGrid(rf.numTrees, Array(10))
+      //.addGrid(rf.numTrees, Array(10, 100, 200))
+      //.addGrid(rf.maxDepth, Array(10, 30, 50))
       .build()
 
     // Cross Validator will contribute to a better hyperparameter tuning
