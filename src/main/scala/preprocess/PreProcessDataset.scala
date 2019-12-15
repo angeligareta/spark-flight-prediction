@@ -14,9 +14,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   * Object with methods to preprocess data
   */
 object PreProcessDataset {
-  def getFeaturesPipelineStages(
-    dataset: DataFrame
-  ): Array[PipelineStage with HasHandleInvalid with DefaultParamsWritable] = {
+  def getFeaturesPipelineStages()
+    : Array[PipelineStage with HasHandleInvalid with DefaultParamsWritable] = {
     val uniqueCarrierIndexer =
       new StringIndexer()
         .setInputCol("UniqueCarrier")

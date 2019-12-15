@@ -12,7 +12,7 @@ object RandomForestModel {
   def start(dataset: DataFrame): Unit = {
     // Split the data into training and test sets (30% held out for testing).
     val Array(trainingData, testData) = dataset.randomSplit(Array(0.7, 0.3))
-    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages(dataset)
+    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
 
     // Train a RandomForest model.
     val rf = new RandomForestRegressor()
