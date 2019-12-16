@@ -114,6 +114,8 @@ object PreProcessDataset {
       preProcessDataset = preProcessDataset
         .withColumn(continuousVariable, $"${continuousVariable}" cast "Double")
     })
+    preProcessDataset = preProcessDataset
+      .withColumn("ArrDelay", $"ArrDelay" cast "Double")
 
     println(preProcessDataset.dtypes.mkString(", "))
 
