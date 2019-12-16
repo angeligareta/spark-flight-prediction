@@ -33,7 +33,7 @@ object ArrDelayPredictor {
       val datasetsDF = spark.read
         .format("csv")
         .option("header", "true")
-        .load(datasetFolderPath + "/1996_short.csv")
+        .load(datasetFolderPath + "/1996.csv")
 
       // Preprocess data
       val processedDatasetsDF = PreProcessDataset.start(spark, datasetsDF);

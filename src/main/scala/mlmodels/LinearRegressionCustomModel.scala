@@ -85,16 +85,6 @@ object LinearRegressionCustomModel {
     // Split the data into training and test sets (30% held out for testing).
     val Array(trainingData, testData) = dataset.randomSplit(Array(0.7, 0.3))
 
-    val pipelineStages = PreProcessDataset.getFeaturesPipelineStages();
-    val pipeline = new Pipeline()
-      .setStages(pipelineStages)
-      .fit(trainingData)
-
-    //pipeline.write.overwrite().save(VALIDATION_PIPELINE_PATH);
-    pipeline.transform(trainingData).show(25)
-
-    return;
-
     // Get the transformed test data
     var transformedTestData: DataFrame = null
     try {
@@ -102,6 +92,7 @@ object LinearRegressionCustomModel {
     } catch {
       case x: InvalidInputException => {
         transformedTestData = saveValidationDataPipeline(testData);
+        transformedTestData.show(10, false)
       }
     }
 
