@@ -33,7 +33,7 @@ object ArrDelayPredictor {
       val datasetsDF = spark.read
         .format("csv")
         .option("header", "true")
-        .load(datasetFolderPath + "/1996.csv")
+        .load(datasetFolderPath + "/1996_short.csv")
 
       // Preprocess data
       val processedDatasetsDF = PreProcessDataset.start(spark, datasetsDF);
@@ -41,7 +41,7 @@ object ArrDelayPredictor {
 
       // Execute ML model by choice of user
       val supportedMlModels = Array("lr, dt, rf");
-      var mlModelSelected = if (interactiveMode) "" else "rf";
+      var mlModelSelected = if (interactiveMode) "" else "lr";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {

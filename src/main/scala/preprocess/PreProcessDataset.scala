@@ -2,6 +2,8 @@ package preprocess
 
 import org.apache.spark.ml.PipelineStage
 import org.apache.spark.ml.feature.{
+  MinMaxScaler,
+  Normalizer,
   OneHotEncoderEstimator,
   StringIndexer,
   VectorAssembler
@@ -53,7 +55,7 @@ object PreProcessDataset {
   );
   val indexedCategoricalVariables = categoricalVariables.map(v => s"${v}Index")
   val encodedCategoricalVariables = categoricalVariables.map(v => s"${v}Vec");
-  val featuresVariables = encodedCategoricalVariables ++ continuousVariables
+  val featuresVariables = indexedCategoricalVariables ++ continuousVariables
 
   def getFeaturesPipelineStages(): Array[PipelineStage] = {
     val categoricalIndexers = categoricalVariables
@@ -61,7 +63,8 @@ object PreProcessDataset {
         v =>
           new StringIndexer()
             .setInputCol(v)
-            .setOutputCol(v + "Index")
+            .setOutputCol(s"${v}Index")
+            .setHandleInvalid("keep")
       )
     val categoricalEncoder = new OneHotEncoderEstimator()
       .setInputCols(indexedCategoricalVariables)
@@ -69,8 +72,13 @@ object PreProcessDataset {
     val assembler = new VectorAssembler()
       .setInputCols(featuresVariables)
       .setOutputCol("features")
+      .setHandleInvalid("keep")
+    val featuresNormalizer = new Normalizer()
+      .setInputCol("features")
+      .setOutputCol("normFeatures")
+      .setP(1.0)
 
-    categoricalIndexers ++ Array(categoricalEncoder) ++ Array(assembler)
+    categoricalIndexers ++ Array(assembler) ++ Array(featuresNormalizer)
   }
 
   def handleNAValues(dataset: DataFrame): DataFrame = {

@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1576504728928,"sparkVersion":"2.4.4","uid":"strIdx_895a9b1bddb5","paramMap":{"outputCol":"TailNumIndex","inputCol":"TailNum","handleInvalid":"keep"},"defaultParamMap":{"outputCol":"strIdx_895a9b1bddb5__output","stringOrderType":"frequencyDesc","handleInvalid":"error"}}

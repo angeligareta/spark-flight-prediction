@@ -32,9 +32,8 @@ object LinearRegressionCustomModel {
   def trainAndSaveModel(trainingData: DataFrame): LinearRegressionModel = {
     // Declare the linear regression model.
     val lr = new LinearRegression()
-      .setFeaturesCol("features")
+      .setFeaturesCol("normFeatures")
       .setLabelCol("ArrDelay")
-      .setMaxIter(10)
 
     // Get the preprocessing stages from utils.
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
@@ -91,8 +90,8 @@ object LinearRegressionCustomModel {
       transformedTestData = getTransformedValidationData(testData);
     } catch {
       case x: InvalidInputException => {
-        transformedTestData = saveValidationDataPipeline(testData);
-        transformedTestData.show(10, false)
+        transformedTestData = saveValidationDataPipeline(trainingData);
+        transformedTestData.show(300, false)
       }
     }
 

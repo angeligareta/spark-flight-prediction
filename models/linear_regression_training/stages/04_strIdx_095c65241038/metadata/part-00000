@@ -1,1 +1,0 @@
-{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1576452042078,"sparkVersion":"2.4.4","uid":"strIdx_095c65241038","paramMap":{"outputCol":"FlightNumIndex","handleInvalid":"skip","inputCol":"FlightNum"},"defaultParamMap":{"outputCol":"strIdx_095c65241038__output","handleInvalid":"error","stringOrderType":"frequencyDesc"}}
