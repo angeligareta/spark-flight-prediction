@@ -1,10 +1,10 @@
 package mlmodels
 
 import org.apache.hadoop.mapred.InvalidInputException
-import org.apache.spark.ml.evaluation.{RegressionEvaluator}
-import org.apache.spark.ml.{Pipeline, PipelineModel}
+import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.sql.DataFrame
 import preprocess.PreProcessDataset
 import tuning.HyperparameterTuning
@@ -21,7 +21,7 @@ object LinearRegressionCustomModel {
       .fit(validationDataset)
 
     pipeline.write.overwrite().save(VALIDATION_PIPELINE_PATH);
-    return pipeline.transform(validationDataset)
+    pipeline.transform(validationDataset)
   }
 
   def getTransformedValidationData(validationDataset: DataFrame): DataFrame = {

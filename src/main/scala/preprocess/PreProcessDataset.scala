@@ -74,10 +74,11 @@ object PreProcessDataset {
     categoricalIndexers ++ Array(categoricalEncoder) ++ Array(assembler)
   }
 
-  def handleNAValues(preProcessDataset: DataFrame): Unit = {
-    preProcessDataset.columns.foreach(column => {
+  def handleNAValues(dataset: DataFrame): DataFrame = {
+    var preProcessDataset = dataset
+    dataset.columns.foreach(column => {
       var columnType = "StringType"
-      preProcessDataset.dtypes.foreach(tuple => {
+      dataset.dtypes.foreach(tuple => {
         if (tuple._1 == column) {
           columnType = tuple._2
         }
@@ -87,17 +88,19 @@ object PreProcessDataset {
       columnType match {
         case "DoubleType" => {
           val columnMean =
-            preProcessDataset.agg(avg(column)).first().getDouble(0)
+            dataset.agg(avg(column)).first().getDouble(0)
           println(s"Mean is ${columnMean}")
-          preProcessDataset.na.fill(columnMean, Array(column))
+          preProcessDataset = dataset.na.fill(columnMean, Array(column))
         }
         case "StringType" => {
           val categoricalColumnMean = s"No_${column}"
           println(s"Categorical Mean is ${categoricalColumnMean}")
-          preProcessDataset.na.fill(categoricalColumnMean, Array(column))
+          preProcessDataset =
+            dataset.na.fill(categoricalColumnMean, Array(column))
         }
       }
     })
+    preProcessDataset
   }
 
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
@@ -113,7 +116,9 @@ object PreProcessDataset {
     })
 
     println(preProcessDataset.dtypes.mkString(", "))
-    handleNAValues(preProcessDataset);
+
+    // Handle NA Values
+    preProcessDataset = handleNAValues(preProcessDataset);
 
     preProcessDataset
   }
