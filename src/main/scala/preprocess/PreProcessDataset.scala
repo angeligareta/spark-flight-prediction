@@ -62,7 +62,6 @@ object PreProcessDataset {
           new StringIndexer()
             .setInputCol(v)
             .setOutputCol(v + "Index")
-            .setHandleInvalid("skip")
       )
     val categoricalEncoder = new OneHotEncoderEstimator()
       .setInputCols(indexedCategoricalVariables)
@@ -90,13 +89,14 @@ object PreProcessDataset {
           val columnMean =
             dataset.agg(avg(column)).first().getDouble(0)
           println(s"Mean is ${columnMean}")
-          preProcessDataset = dataset.na.fill(columnMean, Array(column))
+          preProcessDataset =
+            preProcessDataset.na.fill(columnMean, Array(column))
         }
         case "StringType" => {
           val categoricalColumnMean = s"No_${column}"
           println(s"Categorical Mean is ${categoricalColumnMean}")
           preProcessDataset =
-            dataset.na.fill(categoricalColumnMean, Array(column))
+            preProcessDataset.na.fill(categoricalColumnMean, Array(column))
         }
       }
     })

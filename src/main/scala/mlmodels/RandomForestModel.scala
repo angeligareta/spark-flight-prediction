@@ -36,9 +36,8 @@ object RandomForestModel {
 
     // We use a ParamGridBuilder to construct a grid of parameters to search over.
     val paramGrid = new ParamGridBuilder()
-      .addGrid(rf.numTrees, Array(200))
-      //.addGrid(rf.numTrees, Array(100, 200, 300))
-      //.addGrid(rf.maxDepth, Array(5, 10, 15))
+      .addGrid(rf.numTrees, Array(100, 200, 300))
+      .addGrid(rf.maxDepth, Array(5, 10))
       .build()
 
     // Cross Validator will contribute to a better hyperparameter tuning
