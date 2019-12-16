@@ -61,7 +61,6 @@ object ArrDelayPredictor {
       }
 
       mlModelSelected match {
-
         case "lr" => {
           println("Linear regression")
           LinearRegressionCustomModel.start(processedDatasetsDF)
