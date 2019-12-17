@@ -5,25 +5,23 @@ import org.apache.spark.sql.DataFrame
 
 object HyperparameterTuning {
   def showModelPrecision(predictions: DataFrame): Unit = {
+    val allowedParams = Array("mse", "rmse", "r2", "mae")
+    var estimatorText = Array[String]()
+
+    allowedParams.foreach(param => {
+      // Evaluator for test error
+      val evaluator = new RegressionEvaluator()
+        .setLabelCol(Utils.ResponseVariable)
+        .setPredictionCol("prediction")
+        .setMetricName(param)
+
+      val estimate = evaluator.evaluate(predictions)
+      estimatorText :+ (s"${param} on test data = $estimate")
+    })
+
     // Select example rows to display.
-    predictions.select("prediction", "ArrDelay", "features").show(5)
-
-    // Evaluator for test error
-    var evaluator = new RegressionEvaluator()
-      .setLabelCol("ArrDelay")
-      .setPredictionCol("prediction")
-      .setMetricName("rmse")
-
-    val rmse = evaluator.evaluate(predictions)
-    println(s"Root Mean Squared Error (RMSE) on test data = $rmse")
-
-    // New evaluator for R2
-    evaluator = new RegressionEvaluator()
-      .setLabelCol("ArrDelay")
-      .setPredictionCol("prediction")
-      .setMetricName("r2")
-
-    val r2 = evaluator.evaluate(predictions)
-    println(s"R2 on test data = $r2")
+    println("RESULTS")
+    predictions.show(20)
+    estimatorText.foreach(println)
   }
 }

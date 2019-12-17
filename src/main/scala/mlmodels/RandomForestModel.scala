@@ -20,7 +20,7 @@ object RandomForestModel {
 
     // Train a RandomForest model.
     val rf = new RandomForestRegressor()
-      .setLabelCol("ArrDelay")
+      .setLabelCol(Utils.ResponseVariable)
       .setFeaturesCol("normFeatures")
       .setMaxBins(3500) // At least as large as all categorical variables
 
@@ -30,14 +30,13 @@ object RandomForestModel {
 
     // Evaluator we want to use to choose the best model.
     val evaluator = new RegressionEvaluator()
-      .setLabelCol("ArrDelay")
+      .setLabelCol(Utils.ResponseVariable)
       .setPredictionCol("prediction")
       .setMetricName("rmse")
 
     // We use a ParamGridBuilder to construct a grid of parameters to search over.
     val paramGrid = new ParamGridBuilder()
-      .addGrid(rf.numTrees, Array(200))
-      .addGrid(rf.maxDepth, Array(5))
+      .addGrid(rf.maxBins, Array(7500))
       //.addGrid(rf.numTrees, Array(100, 200, 300))
       //.addGrid(rf.maxDepth, Array(5, 10))
       .build()

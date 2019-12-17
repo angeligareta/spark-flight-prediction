@@ -20,9 +20,9 @@ object DecisionTreeModel {
 
     // Train a DecisionTree model.
     val dt = new DecisionTreeRegressor()
-      .setLabelCol("ArrDelay")
-      .setFeaturesCol("features")
-      .setMaxBins(3500) // At least as large as all categorical variables
+      .setLabelCol(Utils.ResponseVariable)
+      .setFeaturesCol("normFeatures")
+      .setMaxBins(7500) // At least as large as all categorical variables
 
     // Pipeline to prepare the data before training the model
     val pipeline = new Pipeline()
@@ -30,14 +30,13 @@ object DecisionTreeModel {
 
     // Evaluator we want to use to choose the best model.
     val evaluator = new RegressionEvaluator()
-      .setLabelCol("ArrDelay")
+      .setLabelCol(Utils.ResponseVariable)
       .setPredictionCol("prediction")
       .setMetricName("rmse")
 
     // We use a ParamGridBuilder to construct a grid of parameters to search over.
     val paramGrid = new ParamGridBuilder()
-      .addGrid(dt.maxDepth, Array(5))
-      //.addGrid(dt.maxDepth, Array(5, 7, 9, 11))
+    //.addGrid(dt.maxDepth, Array(5, 7))
       .build()
 
     // Cross Validator will contribute to a better hyperparameter tuning
@@ -46,6 +45,7 @@ object DecisionTreeModel {
       .setEvaluator(evaluator)
       .setEstimatorParamMaps(paramGrid)
       .setNumFolds(5)
+      .setParallelism(3) // Evaluate up to 3 parameter settings in parallel
 
     // Train model using Cross Validator.
     val model = cv.fit(trainingData)
@@ -67,7 +67,7 @@ object DecisionTreeModel {
 
   def start(dataset: DataFrame): Unit = {
     // Split the data into training and test sets (30% held out for testing).
-    var Array(trainingData, testData) = dataset.randomSplit(Array(0.7, 0.3))
+    var Array(trainingData, testData) = dataset.randomSplit(Array(0.8, 0.2))
 
     // Transform validation data
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
@@ -96,9 +96,11 @@ object DecisionTreeModel {
     HyperparameterTuning.showModelPrecision(predictions);
 
     println("PARAMS")
-    println(decisionTreeModel.explainParams())
 
-    println("Feature Importances")
-    println(decisionTreeModel.featureImportances.toString)
+    println("SELECTED NUM MAXBINS")
+    println(decisionTreeModel.getMaxBins)
+
+    println("SELECTED MAX DEPTH")
+    println(decisionTreeModel.getMaxDepth)
   }
 }

@@ -50,9 +50,9 @@ object PreProcessDataset {
     oldTimeVariables.map(variable => s"${variable}Disc")
 
   val totalContinuousVariables
-    : Array[String] = continuousVariables ++ newContinuousVariables
+    : Array[String] = continuousVariables // ++ newContinuousVariables
   val totalCategoricalVariables
-    : Array[String] = categoricalVariables // ++ newCategoricalVariables
+    : Array[String] = categoricalVariables ++ newCategoricalVariables
   val indexedCategoricalVariables: Array[String] =
     totalCategoricalVariables.map(v => s"${v}Index")
 
@@ -106,22 +106,22 @@ object PreProcessDataset {
       }
     })
     // Transform for continuous to continuous
-    oldTimeVariables.foreach(continuousVariable => {
+    /*oldTimeVariables.foreach(continuousVariable => {
       transformedDataset = transformedDataset
         .withColumn(
           s"${continuousVariable}Min",
           transformCustomTimeToMin($"${continuousVariable}") cast "Double"
         )
-    })
+    })*/
 
     // Transform from continuous to discrete
-    /*oldContinuousVariables.foreach(categoricalVariable => {
+    oldTimeVariables.foreach(categoricalVariable => {
       transformedDataset = transformedDataset
         .withColumn(
           s"${categoricalVariable}Disc",
           discretizeTime($"${categoricalVariable}") cast "String"
         )
-    })*/
+    })
 
     transformedDataset = transformedDataset
       .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay") cast "Double")

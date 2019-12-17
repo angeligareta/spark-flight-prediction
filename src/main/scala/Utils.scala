@@ -10,6 +10,7 @@ package object Utils {
   //val SavePath = "/D:";
   val SavePath = "./models";
   val ModelSummaryPath = s"${SavePath}/summary.txt"
+  val ResponseVariable = "ArrDelay" //"ArrDelayCubeRoot"
 
   def printModelSummary(model: LinearRegressionModel) = {
     val trainingSummary = model.summary

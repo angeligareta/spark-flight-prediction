@@ -96,7 +96,7 @@ object ArrDelayPredictor {
 
       // Execute ML model by choice of user
       val supportedMlModels = Array("lr, dt, rf");
-      var mlModelSelected = if (interactiveMode) "" else "rf";
+      var mlModelSelected = if (interactiveMode) "" else "dt";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {
