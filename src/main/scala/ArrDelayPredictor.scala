@@ -5,13 +5,17 @@ import mlmodels.{
   LinearRegressionCustomModel,
   RandomForestModel
 }
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{AnalysisException, DataFrame, SparkSession}
 import preprocess.PreProcessDataset
 
 /**
   * Predictor for ArrDelay target variable in the flights dataset.
   */
 object ArrDelayPredictor {
+
+  val MergedDatasetPath = Utils.SavePath + "/processed_dataset"
+  val MergedPreprocessedDatasetPath = Utils.SavePath + "/merged_processed_dataset"
+
   def main(args: Array[String]) {
     try {
       // An error will be thrown if the arguments required do not exist
@@ -29,15 +33,64 @@ object ArrDelayPredictor {
         .config("spark.master", "local") // Work in local only
         .getOrCreate()
 
-      // Read dataset dataFrame
-      val datasetsDF = spark.read
-        .format("csv")
-        .option("header", "true")
-        .load(datasetFolderPath + "/1996_short.csv")
+      var datasetsDF: DataFrame = spark.emptyDataFrame
 
-      // Preprocess data
-      val processedDatasetsDF = PreProcessDataset.start(spark, datasetsDF);
-      processedDatasetsDF.show(10);
+      try {
+        datasetsDF = spark.read.load(MergedPreprocessedDatasetPath)
+
+        println("Succesfully read preprocessed")
+        datasetsDF.show(100)
+      } catch {
+        case _: AnalysisException => {
+          try {
+            datasetsDF = spark.read.load(MergedDatasetPath)
+
+            println("Succesfully read merged dataset")
+            datasetsDF.show(100)
+          } catch {
+            case _: AnalysisException => {
+              println("Merged data frame did not exist")
+              // Read dataset dataFrame
+              datasetsDF = spark.read
+                .format("csv")
+                .option("header", "true")
+                .load(datasetFolderPath)
+
+              // Extract random sample of the input data
+              val MaxNumRowTruncated = 1500000.0
+              val proportion: Double = MaxNumRowTruncated / datasetsDF
+                .count()
+                .toDouble
+              println(s"Extracting a proportion of ${proportion}...")
+              val truncatedDatasetsDF =
+                datasetsDF.sample(withReplacement = false, proportion, 1234)
+
+              // Show rows before preprocessing
+              println("-Before Preprocessing")
+              println(s"Number of rows: ${truncatedDatasetsDF.count()}")
+              truncatedDatasetsDF
+                .sample(withReplacement = false, 0.1, 1234)
+                .show(100)
+
+              // Save dataset to memory
+              truncatedDatasetsDF.write.save(MergedDatasetPath)
+
+              // Use short dataset
+              datasetsDF = truncatedDatasetsDF
+            }
+          } finally {
+            println("- Preprocessing data")
+            // If not processed, preprocess data
+            datasetsDF = PreProcessDataset.start(spark, datasetsDF)
+
+            datasetsDF.write
+              .mode("overwrite")
+              .save(MergedPreprocessedDatasetPath)
+          }
+        }
+      }
+
+      datasetsDF.show(100);
 
       // Execute ML model by choice of user
       val supportedMlModels = Array("lr, dt, rf");
@@ -63,20 +116,17 @@ object ArrDelayPredictor {
       mlModelSelected match {
         case "lr" => {
           println("Linear regression")
-          LinearRegressionCustomModel.start(processedDatasetsDF)
+          LinearRegressionCustomModel.start(datasetsDF)
         }
         case "dt" => {
           println("Decision tree")
-          DecisionTreeModel.start(processedDatasetsDF)
+          DecisionTreeModel.start(datasetsDF)
         }
         case "rf" => {
           println("Random Forest")
-          RandomForestModel.start(processedDatasetsDF)
+          RandomForestModel.start(datasetsDF)
         }
       }
-
-      // TODO: Show accuracy of the ML chosen
-
       spark.stop()
     } catch {
       case _: NoSuchElementException => {

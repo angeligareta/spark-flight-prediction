@@ -2,7 +2,6 @@ package preprocess
 
 import org.apache.spark.ml.PipelineStage
 import org.apache.spark.ml.feature.{
-  MinMaxScaler,
   Normalizer,
   OneHotEncoderEstimator,
   StringIndexer,
@@ -25,12 +24,15 @@ object PreProcessDataset {
     "WeatherDelay",
     "NASDelay",
     "SecurityDelay",
-    "LateAircraftDelay"
+    "LateAircraftDelay",
+    // New variables that we think are unnecessary
+    "Cancelled",
+    "CancellationCode"
   );
 
   val categoricalVariables =
     Array(
-      //"Year", if we have only one year could not be categorical
+      "Year",
       "Month",
       "DayofMonth",
       "DayOfWeek",
@@ -39,8 +41,8 @@ object PreProcessDataset {
       "TailNum",
       "Origin",
       "Dest"
-      // "Cancelled" canceled plane does not affect arrival delay
-      //"CancellationCode"
+      //"DepTimeDisc", To try without DepTimeMin
+      //"CRSDepTimeDisc" To try without CRSDepTimeMin
     )
 
   val continuousVariables = Array(
@@ -51,7 +53,9 @@ object PreProcessDataset {
     "CRSElapsedTime",
     "DepDelay",
     "Distance",
-    "TaxiOut"
+    "TaxiOut",
+    "DepTimeMin",
+    "CRSDepTimeMin"
   );
   val indexedCategoricalVariables = categoricalVariables.map(v => s"${v}Index")
   val encodedCategoricalVariables = categoricalVariables.map(v => s"${v}Vec");
@@ -78,11 +82,48 @@ object PreProcessDataset {
       .setOutputCol("normFeatures")
       .setP(1.0)
 
-    categoricalIndexers ++ Array(assembler) ++ Array(featuresNormalizer)
+    categoricalIndexers ++ Array(
+      categoricalEncoder,
+      assembler,
+      featuresNormalizer
+    )
+  }
+
+  def addNewColumns(spark: SparkSession, dataset: DataFrame): DataFrame = {
+    // Import implicits to use $
+    import spark.implicits._
+
+    // Transformation to convert column from custom time to min
+    val transformCustomTimeToMin = udf((time: Double) => {
+      val timeInString = time.toInt.toString
+
+      var hour = 0
+      if (timeInString.length > 2) {
+        hour = timeInString.substring(0, timeInString.length - 2).toInt
+      }
+      (hour * 60) + timeInString.takeRight(2).toInt
+    })
+
+    val discretizeTime = udf((time: Double) => {
+      time match {
+        case time if time >= 1 && time <= 1125   => "Morning"
+        case time if time > 1125 && time <= 1750 => "Afternoon"
+        case time if time > 1750 && time <= 2400 => "Evening"
+      }
+    })
+
+    dataset
+      .withColumn("DepTimeMin", transformCustomTimeToMin($"DepTime"))
+      .withColumn("CRSDepTimeMin", transformCustomTimeToMin($"CRSDepTime"))
+      .withColumn("DepTimeDisc", discretizeTime($"DepTime"))
+      .withColumn("CRSDepTimeDisc", discretizeTime($"CRSDepTime"))
+      .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay"))
   }
 
   def handleNAValues(dataset: DataFrame): DataFrame = {
-    var preProcessDataset = dataset
+    // First drop na of explanatory variable
+    var preProcessDataset = dataset.na.drop(Array("ArrDelay"))
+
     dataset.columns.foreach(column => {
       var columnType = "StringType"
       dataset.dtypes.foreach(tuple => {
@@ -113,7 +154,7 @@ object PreProcessDataset {
 
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
     // Drop columns that the exercise required.
-    var preProcessDataset = dataset.drop(variablesToDrop: _*);
+    var preProcessDataset = dataset.drop(variablesToDrop: _*)
 
     // Import implicits to use $
     import spark.implicits._
@@ -128,7 +169,10 @@ object PreProcessDataset {
     println(preProcessDataset.dtypes.mkString(", "))
 
     // Handle NA Values
-    preProcessDataset = handleNAValues(preProcessDataset);
+    preProcessDataset = handleNAValues(preProcessDataset)
+
+    // Add new columns
+    preProcessDataset = addNewColumns(spark, preProcessDataset)
 
     preProcessDataset
   }

@@ -13,7 +13,7 @@ import preprocess.PreProcessDataset
 import tuning.HyperparameterTuning
 
 object DecisionTreeModel {
-  val DecisionTreeModelPath = Utils.MODEL_PATH + "/decision_tree"
+  val DecisionTreeModelPath = Utils.SavePath + "/decision_tree"
 
   def trainAndGetModel(trainingData: DataFrame): DecisionTreeRegressionModel = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()

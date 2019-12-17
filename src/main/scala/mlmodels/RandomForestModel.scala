@@ -13,7 +13,7 @@ import preprocess.PreProcessDataset
 import tuning.HyperparameterTuning
 
 object RandomForestModel {
-  val RandomForestModelPath = "/D:/random_forest"
+  val RandomForestModelPath = Utils.SavePath + "/random_forest"
 
   def trainAndGetModel(trainingData: DataFrame): RandomForestRegressionModel = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
@@ -21,7 +21,7 @@ object RandomForestModel {
     // Train a RandomForest model.
     val rf = new RandomForestRegressor()
       .setLabelCol("ArrDelay")
-      .setFeaturesCol("features")
+      .setFeaturesCol("normFeatures")
       .setMaxBins(3500) // At least as large as all categorical variables
 
     // Pipeline to prepare the data before training the model

@@ -11,8 +11,8 @@ import tuning.HyperparameterTuning
 
 object LinearRegressionCustomModel {
 
-  val LINEAR_MODEL_PATH = Utils.MODEL_PATH + "/linear_regression";
-  val VALIDATION_PIPELINE_PATH = Utils.MODEL_PATH + "/linear_regression_training";
+  val LINEAR_MODEL_PATH = Utils.SavePath + "/linear_regression";
+  val VALIDATION_PIPELINE_PATH = Utils.SavePath + "/linear_regression_training";
 
   def saveValidationDataPipeline(validationDataset: DataFrame): DataFrame = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages();
@@ -30,10 +30,12 @@ object LinearRegressionCustomModel {
   }
 
   def trainAndSaveModel(trainingData: DataFrame): LinearRegressionModel = {
+    val responseVariable = "ArrDelayCubeRoot"
     // Declare the linear regression model.
     val lr = new LinearRegression()
       .setFeaturesCol("normFeatures")
-      .setLabelCol("ArrDelay")
+      .setLabelCol(responseVariable)
+    // .setLabelCol("ArrDelay") TODO: Try model with this
 
     // Get the preprocessing stages from utils.
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
@@ -51,7 +53,7 @@ object LinearRegressionCustomModel {
     // We now treat the Pipeline as an Estimator, wrapping it in a CrossValidator instance.
     val cv = new CrossValidator()
       .setEstimator(pipeline)
-      .setEvaluator(new RegressionEvaluator().setLabelCol("ArrDelay"))
+      .setEvaluator(new RegressionEvaluator().setLabelCol(responseVariable))
       .setEstimatorParamMaps(paramGrid)
       .setNumFolds(2) // Use 3+ in practice
       .setParallelism(2) // Evaluate up to 2 parameter settings in parallel

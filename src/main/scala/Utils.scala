@@ -1,5 +1,4 @@
 import java.io.{File, PrintWriter}
-import java.util
 
 import org.apache.spark.ml.regression.LinearRegressionModel
 import preprocess.PreProcessDataset
@@ -8,13 +7,14 @@ import preprocess.PreProcessDataset
   * Common utils for the package.
   */
 package object Utils {
-  val MODEL_PATH = "./models";
-  val MODEL_SUMMARY_PATH = s"${MODEL_PATH}/summary.txt"
+  //val SavePath = "/D:";
+  val SavePath = "./models";
+  val ModelSummaryPath = s"${SavePath}/summary.txt"
 
   def printModelSummary(model: LinearRegressionModel) = {
     val trainingSummary = model.summary
 
-    val pw = new PrintWriter(new File(MODEL_SUMMARY_PATH))
+    val pw = new PrintWriter(new File(ModelSummaryPath))
 
     var toWriteString = s"totalIterations -> ${trainingSummary.totalIterations}"
     pw.println(toWriteString)
