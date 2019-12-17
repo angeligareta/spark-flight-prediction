@@ -335,5 +335,6 @@ $RECYCLE.BIN/
 # For SBT
 .jvmopts
 
+models
 
 # End of https://www.gitignore.io/api/scala,spark,intellij,apachehadoop,intellij+all,intellij+iml
