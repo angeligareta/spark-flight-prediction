@@ -83,9 +83,9 @@ object ArrDelayPredictor {
             // If not processed, preprocess data
             datasetsDF = PreProcessDataset.start(spark, datasetsDF)
 
-            datasetsDF.write
-              .mode("overwrite")
-              .save(MergedPreprocessedDatasetPath)
+            //datasetsDF.write.save(MergedPreprocessedDatasetPath)
+
+            println("Preprocessed data saved is disabled")
           }
         }
       }
