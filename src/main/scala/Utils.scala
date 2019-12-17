@@ -10,6 +10,8 @@ package object Utils {
   //val SavePath = "/D:";
   val SavePath = "./models";
   val ModelSummaryPath = s"${SavePath}/summary.txt"
+
+  val DefaultModel = "rf"
   val ResponseVariable = "ArrDelayCubeRoot" //"ArrDelayCubeRoot"
   val CategoricalMode = true
 
