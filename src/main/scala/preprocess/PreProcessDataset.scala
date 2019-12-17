@@ -50,9 +50,10 @@ object PreProcessDataset {
     oldTimeVariables.map(variable => s"${variable}Disc")
 
   val totalContinuousVariables
-    : Array[String] = continuousVariables // ++ newContinuousVariables
+    : Array[String] = continuousVariables ++ newContinuousVariables
   val totalCategoricalVariables
-    : Array[String] = categoricalVariables ++ newCategoricalVariables
+    : Array[String] = categoricalVariables // ++ newCategoricalVariables
+
   val indexedCategoricalVariables: Array[String] =
     totalCategoricalVariables.map(v => s"${v}Index")
 
@@ -105,14 +106,14 @@ object PreProcessDataset {
         case _                                         => "Evening"
       }
     })
-    // Transform for continuous to continuous
-    /*oldTimeVariables.foreach(continuousVariable => {
+
+    oldTimeVariables.foreach(continuousVariable => {
       transformedDataset = transformedDataset
         .withColumn(
           s"${continuousVariable}Min",
           transformCustomTimeToMin($"${continuousVariable}") cast "Double"
         )
-    })*/
+    })
 
     // Transform from continuous to discrete
     oldTimeVariables.foreach(categoricalVariable => {
@@ -131,7 +132,7 @@ object PreProcessDataset {
 
   def handleNAValues(dataset: DataFrame,
                      columnsToProcess: Array[String]): DataFrame = {
-    // First drop na of explanatory variable
+// First drop na of explanatory variable
     var preProcessDataset = dataset.na.drop(Array("ArrDelay"))
 
     columnsToProcess.foreach(column => {
@@ -166,7 +167,7 @@ object PreProcessDataset {
                               dataset: DataFrame,
                               variablesToCast: Array[String]): DataFrame = {
     var preProcessDataset = dataset
-    // Import implicits to use $
+// Import implicits to use $
     import spark.implicits._
 
     variablesToCast.foreach(continuousVariable => {
@@ -178,13 +179,13 @@ object PreProcessDataset {
   }
 
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
-    // Drop columns that the exercise required.
+// Drop columns that the exercise required.
     var preProcessDataset = dataset.drop(variablesToDrop: _*)
 
     println("Dataset types")
     println(preProcessDataset.dtypes.mkString(", "))
 
-    // Cast variables
+// Cast variables
     preProcessDataset = castContinuousVariables(
       spark,
       preProcessDataset,
@@ -193,7 +194,7 @@ object PreProcessDataset {
     println("Preprocessed dataset after cast")
     preProcessDataset.show(100)
 
-    // Handle NA Values
+// Handle NA Values
     preProcessDataset = handleNAValues(
       preProcessDataset,
       categoricalVariables ++ continuousVariables ++ Array("ArrDelay")
@@ -201,7 +202,7 @@ object PreProcessDataset {
     println("Preprocessed dataset after handle na values")
     preProcessDataset.show(100)
 
-    // Add new columns
+// Add new columns
     preProcessDataset = addNewColumns(spark, preProcessDataset)
 
     println("Preprocessed dataset after add new columns")
