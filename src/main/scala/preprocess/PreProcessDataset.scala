@@ -1,12 +1,7 @@
 package preprocess
 
 import org.apache.spark.ml.PipelineStage
-import org.apache.spark.ml.feature.{
-  Normalizer,
-  OneHotEncoderEstimator,
-  StringIndexer,
-  VectorAssembler
-}
+import org.apache.spark.ml.feature.{Normalizer, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -41,28 +36,36 @@ object PreProcessDataset {
       "TailNum",
       "Origin",
       "Dest"
-      //"DepTimeDisc", To try without DepTimeMin
-      //"CRSDepTimeDisc" To try without CRSDepTimeMin
     )
 
   val continuousVariables = Array(
-    "Year",
     "DepTime",
     "CRSDepTime",
     "CRSArrTime",
     "CRSElapsedTime",
     "DepDelay",
     "Distance",
-    "TaxiOut",
-    "DepTimeMin",
-    "CRSDepTimeMin"
-  );
-  val indexedCategoricalVariables = categoricalVariables.map(v => s"${v}Index")
-  val encodedCategoricalVariables = categoricalVariables.map(v => s"${v}Vec");
-  val featuresVariables = indexedCategoricalVariables ++ continuousVariables
+    "TaxiOut"
+  )
+
+  val newContinuousVariables = Array("DepTimeMin", "CRSDepTimeMin")
+  val newCategoricalVariables = Array(
+    //"DepTimeDisc", To try without DepTimeMin
+    //"CRSDepTimeDisc" To try without CRSDepTimeMin
+  )
+
+  val totalContinuousVariables
+    : Array[String] = continuousVariables ++ newContinuousVariables
+  val totalCategoricalVariables
+    : Array[String] = categoricalVariables // ++ newCategoricalVariables
+  val indexedCategoricalVariables: Array[String] =
+    totalCategoricalVariables.map(v => s"${v}Index")
+
+  val featuresVariables
+    : Array[String] = indexedCategoricalVariables ++ totalContinuousVariables
 
   def getFeaturesPipelineStages(): Array[PipelineStage] = {
-    val categoricalIndexers = categoricalVariables
+    val categoricalIndexers = totalCategoricalVariables
       .map(
         v =>
           new StringIndexer()
@@ -70,23 +73,18 @@ object PreProcessDataset {
             .setOutputCol(s"${v}Index")
             .setHandleInvalid("keep")
       )
-    val categoricalEncoder = new OneHotEncoderEstimator()
-      .setInputCols(indexedCategoricalVariables)
-      .setOutputCols(encodedCategoricalVariables)
+
     val assembler = new VectorAssembler()
       .setInputCols(featuresVariables)
       .setOutputCol("features")
       .setHandleInvalid("keep")
+
     val featuresNormalizer = new Normalizer()
       .setInputCol("features")
       .setOutputCol("normFeatures")
       .setP(1.0)
 
-    categoricalIndexers ++ Array(
-      categoricalEncoder,
-      assembler,
-      featuresNormalizer
-    )
+    categoricalIndexers ++ Array(assembler, featuresNormalizer)
   }
 
   def addNewColumns(spark: SparkSession, dataset: DataFrame): DataFrame = {
@@ -113,18 +111,25 @@ object PreProcessDataset {
     })
 
     dataset
-      .withColumn("DepTimeMin", transformCustomTimeToMin($"DepTime"))
-      .withColumn("CRSDepTimeMin", transformCustomTimeToMin($"CRSDepTime"))
-      .withColumn("DepTimeDisc", discretizeTime($"DepTime"))
-      .withColumn("CRSDepTimeDisc", discretizeTime($"CRSDepTime"))
-      .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay"))
+      .withColumn(
+        "DepTimeMin",
+        transformCustomTimeToMin($"DepTime") cast "Double"
+      )
+      .withColumn(
+        "CRSDepTimeMin",
+        transformCustomTimeToMin($"CRSDepTime") cast "Double"
+      )
+      .withColumn("DepTimeDisc", discretizeTime($"DepTime") cast "String")
+      .withColumn("CRSDepTimeDisc", discretizeTime($"CRSDepTime") cast "String")
+      .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay") cast "Double")
   }
 
-  def handleNAValues(dataset: DataFrame): DataFrame = {
+  def handleNAValues(dataset: DataFrame,
+                     columnsToProcess: Array[String]): DataFrame = {
     // First drop na of explanatory variable
     var preProcessDataset = dataset.na.drop(Array("ArrDelay"))
 
-    dataset.columns.foreach(column => {
+    columnsToProcess.foreach(column => {
       var columnType = "StringType"
       dataset.dtypes.foreach(tuple => {
         if (tuple._1 == column) {
@@ -152,27 +157,50 @@ object PreProcessDataset {
     preProcessDataset
   }
 
+  def castContinuousVariables(spark: SparkSession,
+                              dataset: DataFrame,
+                              variablesToCast: Array[String]): DataFrame = {
+    var preProcessDataset = dataset
+    // Import implicits to use $
+    import spark.implicits._
+
+    variablesToCast.foreach(continuousVariable => {
+      preProcessDataset = preProcessDataset
+        .withColumn(continuousVariable, $"${continuousVariable}" cast "Double")
+    })
+
+    preProcessDataset
+  }
+
   def start(spark: SparkSession, dataset: DataFrame): DataFrame = {
     // Drop columns that the exercise required.
     var preProcessDataset = dataset.drop(variablesToDrop: _*)
 
-    // Import implicits to use $
-    import spark.implicits._
-
-    continuousVariables.foreach(continuousVariable => {
-      preProcessDataset = preProcessDataset
-        .withColumn(continuousVariable, $"${continuousVariable}" cast "Double")
-    })
-    preProcessDataset = preProcessDataset
-      .withColumn("ArrDelay", $"ArrDelay" cast "Double")
-
+    println("Dataset types")
     println(preProcessDataset.dtypes.mkString(", "))
 
+    // Cast variables
+    preProcessDataset = castContinuousVariables(
+      spark,
+      preProcessDataset,
+      continuousVariables ++ Array("ArrDelay")
+    )
+    println("Preprocessed dataset after cast")
+    preProcessDataset.show(100)
+
     // Handle NA Values
-    preProcessDataset = handleNAValues(preProcessDataset)
+    preProcessDataset = handleNAValues(
+      preProcessDataset,
+      categoricalVariables ++ continuousVariables ++ Array("ArrDelay")
+    )
+    println("Preprocessed dataset after handle na values")
+    preProcessDataset.show(100)
 
     // Add new columns
     preProcessDataset = addNewColumns(spark, preProcessDataset)
+
+    println("Preprocessed dataset after add new columns")
+    preProcessDataset.show(100)
 
     preProcessDataset
   }

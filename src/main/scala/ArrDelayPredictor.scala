@@ -13,7 +13,7 @@ import preprocess.PreProcessDataset
   */
 object ArrDelayPredictor {
 
-  val MergedDatasetPath = Utils.SavePath + "/processed_dataset"
+  val MergedDatasetPath = Utils.SavePath + "/merged_dataset"
   val MergedPreprocessedDatasetPath = Utils.SavePath + "/merged_processed_dataset"
 
   def main(args: Array[String]) {
