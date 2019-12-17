@@ -50,9 +50,9 @@ object PreProcessDataset {
     oldTimeVariables.map(variable => s"${variable}Disc")
 
   val totalContinuousVariables
-    : Array[String] = continuousVariables ++ newContinuousVariables
+    : Array[String] = continuousVariables // ++ newContinuousVariables
   val totalCategoricalVariables
-    : Array[String] = categoricalVariables // ++ newCategoricalVariables
+    : Array[String] = categoricalVariables ++ newCategoricalVariables
 
   val indexedTotalCategoricalVariables: Array[String] =
     totalCategoricalVariables.map(v => s"${v}Index")

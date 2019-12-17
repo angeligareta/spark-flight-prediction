@@ -16,7 +16,10 @@ object HyperparameterTuning {
         .setMetricName(param)
 
       val estimate = evaluator.evaluate(predictions)
-      estimatorText :+ (s"${param} on test data = $estimate")
+
+      estimatorText = estimatorText :+ (
+        s"${param} on test data = ${estimate}"
+      )
     })
 
     // Select example rows to display.
