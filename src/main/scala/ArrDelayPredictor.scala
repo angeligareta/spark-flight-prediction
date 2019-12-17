@@ -92,9 +92,11 @@ object ArrDelayPredictor {
 
       datasetsDF.show(100);
 
+      datasetsDF.cache()
+
       // Execute ML model by choice of user
       val supportedMlModels = Array("lr, dt, rf");
-      var mlModelSelected = if (interactiveMode) "" else "lr";
+      var mlModelSelected = if (interactiveMode) "" else "rf";
 
       // If interactive mode, allow user to select a custom machine learning technique
       while (mlModelSelected == "") {

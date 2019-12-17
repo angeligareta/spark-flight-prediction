@@ -38,21 +38,16 @@ object PreProcessDataset {
       "Dest"
     )
 
-  val continuousVariables = Array(
-    "DepTime",
-    "CRSDepTime",
-    "CRSArrTime",
-    "CRSElapsedTime",
-    "DepDelay",
-    "Distance",
-    "TaxiOut"
-  )
+  val continuousVariables = Array("DepDelay", "Distance", "TaxiOut")
 
-  val newContinuousVariables = Array("DepTimeMin", "CRSDepTimeMin")
-  val newCategoricalVariables = Array(
-    //"DepTimeDisc", To try without DepTimeMin
-    //"CRSDepTimeDisc" To try without CRSDepTimeMin
-  )
+  val oldTimeVariables =
+    Array("DepTime", "CRSDepTime", "CRSArrTime", "CRSElapsedTime")
+
+  val newContinuousVariables =
+    oldTimeVariables.map(variable => s"${variable}Min")
+
+  val newCategoricalVariables =
+    oldTimeVariables.map(variable => s"${variable}Disc")
 
   val totalContinuousVariables
     : Array[String] = continuousVariables ++ newContinuousVariables
@@ -88,6 +83,7 @@ object PreProcessDataset {
   }
 
   def addNewColumns(spark: SparkSession, dataset: DataFrame): DataFrame = {
+    var transformedDataset = dataset
     // Import implicits to use $
     import spark.implicits._
 
@@ -104,24 +100,33 @@ object PreProcessDataset {
 
     val discretizeTime = udf((time: Double) => {
       time match {
-        case time if time >= 1 && time <= 1125   => "Morning"
-        case time if time > 1125 && time <= 1750 => "Afternoon"
-        case time if time > 1750 && time <= 2400 => "Evening"
+        case time if (time >= 1.0 && time <= 1125.0)   => "Morning"
+        case time if (time > 1125.0 && time <= 1750.0) => "Afternoon"
+        case _                                         => "Evening"
       }
     })
+    // Transform for continuous to continuous
+    oldTimeVariables.foreach(continuousVariable => {
+      transformedDataset = transformedDataset
+        .withColumn(
+          s"${continuousVariable}Min",
+          transformCustomTimeToMin($"${continuousVariable}") cast "Double"
+        )
+    })
 
-    dataset
-      .withColumn(
-        "DepTimeMin",
-        transformCustomTimeToMin($"DepTime") cast "Double"
-      )
-      .withColumn(
-        "CRSDepTimeMin",
-        transformCustomTimeToMin($"CRSDepTime") cast "Double"
-      )
-      .withColumn("DepTimeDisc", discretizeTime($"DepTime") cast "String")
-      .withColumn("CRSDepTimeDisc", discretizeTime($"CRSDepTime") cast "String")
+    // Transform from continuous to discrete
+    /*oldContinuousVariables.foreach(categoricalVariable => {
+      transformedDataset = transformedDataset
+        .withColumn(
+          s"${categoricalVariable}Disc",
+          discretizeTime($"${categoricalVariable}") cast "String"
+        )
+    })*/
+
+    transformedDataset = transformedDataset
       .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay") cast "Double")
+
+    transformedDataset
   }
 
   def handleNAValues(dataset: DataFrame,
