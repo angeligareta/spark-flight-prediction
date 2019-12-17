@@ -49,10 +49,14 @@ object PreProcessDataset {
   val newCategoricalVariables =
     oldTimeVariables.map(variable => s"${variable}Disc")
 
-  val totalContinuousVariables
-    : Array[String] = continuousVariables // ++ newContinuousVariables
-  val totalCategoricalVariables
-    : Array[String] = categoricalVariables ++ newCategoricalVariables
+  var totalCategoricalVariables: Array[String] = categoricalVariables
+  var totalContinuousVariables: Array[String] = continuousVariables
+
+  if (Utils.CategoricalMode) {
+    totalCategoricalVariables = totalCategoricalVariables ++ newCategoricalVariables
+  } else {
+    totalContinuousVariables = totalContinuousVariables ++ newContinuousVariables
+  }
 
   val indexedTotalCategoricalVariables: Array[String] =
     totalCategoricalVariables.map(v => s"${v}Index")
@@ -107,22 +111,24 @@ object PreProcessDataset {
       }
     })
 
-    oldTimeVariables.foreach(continuousVariable => {
-      transformedDataset = transformedDataset
-        .withColumn(
-          s"${continuousVariable}Min",
-          transformCustomTimeToMin($"${continuousVariable}") cast "Double"
-        )
-    })
-
-    // Transform from continuous to discrete
-    oldTimeVariables.foreach(categoricalVariable => {
-      transformedDataset = transformedDataset
-        .withColumn(
-          s"${categoricalVariable}Disc",
-          discretizeTime($"${categoricalVariable}") cast "String"
-        )
-    })
+    // Add variables depending on the mode
+    if (Utils.CategoricalMode) {
+      oldTimeVariables.foreach(categoricalVariable => {
+        transformedDataset = transformedDataset
+          .withColumn(
+            s"${categoricalVariable}Disc",
+            discretizeTime($"${categoricalVariable}") cast "String"
+          )
+      })
+    } else {
+      oldTimeVariables.foreach(continuousVariable => {
+        transformedDataset = transformedDataset
+          .withColumn(
+            s"${continuousVariable}Min",
+            transformCustomTimeToMin($"${continuousVariable}") cast "Double"
+          )
+      })
+    }
 
     transformedDataset = transformedDataset
       .withColumn("ArrDelayCubeRoot", cbrt($"ArrDelay") cast "Double")
