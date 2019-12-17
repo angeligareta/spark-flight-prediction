@@ -54,11 +54,11 @@ object PreProcessDataset {
   val totalCategoricalVariables
     : Array[String] = categoricalVariables // ++ newCategoricalVariables
 
-  val indexedCategoricalVariables: Array[String] =
+  val indexedTotalCategoricalVariables: Array[String] =
     totalCategoricalVariables.map(v => s"${v}Index")
 
   val featuresVariables
-    : Array[String] = totalCategoricalVariables ++ totalContinuousVariables
+    : Array[String] = indexedTotalCategoricalVariables ++ totalContinuousVariables
 
   def getFeaturesPipelineStages(): Array[PipelineStage] = {
     val categoricalIndexers = totalCategoricalVariables
