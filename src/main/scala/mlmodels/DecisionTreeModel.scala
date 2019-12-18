@@ -15,6 +15,10 @@ import tuning.HyperparameterTuning
 object DecisionTreeModel {
   val DecisionTreeModelPath = Utils.SavePath + "/decision_tree"
 
+  def getDecisionTreePath() = {
+    s"${Utils.getSavePath()}/decision_tree";
+  }
+
   def trainAndGetModel(trainingData: DataFrame): DecisionTreeRegressionModel = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
 
@@ -61,7 +65,7 @@ object DecisionTreeModel {
     // Save best model
     decisionTreeModel.write
       .overwrite()
-      .save(DecisionTreeModelPath)
+      .save(getDecisionTreePath())
 
     decisionTreeModel;
   }
@@ -81,7 +85,7 @@ object DecisionTreeModel {
     // First try to load random forest from path.
     try {
       decisionTreeModel =
-        DecisionTreeRegressionModel.load(DecisionTreeModelPath)
+        DecisionTreeRegressionModel.load(getDecisionTreePath())
       println("Loading Model from file...")
     }
     // Otherwise, train the model with training data and get new model.

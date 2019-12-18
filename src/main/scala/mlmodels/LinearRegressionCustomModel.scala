@@ -11,8 +11,13 @@ import tuning.HyperparameterTuning
 
 object LinearRegressionCustomModel {
 
-  val LINEAR_MODEL_PATH = Utils.SavePath + "/linear_regression";
-  val VALIDATION_PIPELINE_PATH = Utils.SavePath + "/linear_regression_training";
+  def getLinearModelPath() = {
+    s"${Utils.getSavePath()}/linear_regression";
+  }
+
+  def getLinearModelPipelinePath() = {
+    s"${Utils.getSavePath()}/linear_regression_training"
+  }
 
   def saveValidationDataPipeline(validationDataset: DataFrame): DataFrame = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages();
@@ -20,12 +25,12 @@ object LinearRegressionCustomModel {
       .setStages(pipelineStages)
       .fit(validationDataset)
 
-    pipeline.write.overwrite().save(VALIDATION_PIPELINE_PATH);
+    pipeline.write.overwrite().save(getLinearModelPipelinePath());
     pipeline.transform(validationDataset)
   }
 
   def getTransformedValidationData(validationDataset: DataFrame): DataFrame = {
-    val pipeline = PipelineModel.load(VALIDATION_PIPELINE_PATH);
+    val pipeline = PipelineModel.load(getLinearModelPipelinePath());
     return pipeline.transform(validationDataset);
   }
 
@@ -72,15 +77,15 @@ object LinearRegressionCustomModel {
     Utils.printModelSummary(linearModel)
 
     // Save model on disk.
-    linearModel.write.overwrite().save(LINEAR_MODEL_PATH)
-    println(s"Model saved on ${LINEAR_MODEL_PATH}")
+    linearModel.write.overwrite().save(getLinearModelPath())
+    println(s"Model saved on ${getLinearModelPath()}")
 
     return linearModel;
   }
 
   def loadModelFromLocalStorage(): LinearRegressionModel = {
     val model =
-      LinearRegressionModel.load(LINEAR_MODEL_PATH);
+      LinearRegressionModel.load(getLinearModelPath());
     return model
   }
 

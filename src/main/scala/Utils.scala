@@ -13,12 +13,12 @@ package object Utils {
 
   //val SavePath = "./models"
 
-  val DefaultModel = "dt"
+  var DefaultModel = "dt"
   val ResponseVariable = "ArrDelay" //"ArrDelayCubeRoot"
   val CategoricalMode = false
 
   val SavePath =
-    s"./models/${DefaultModel}-${ResponseVariable}-${CategoricalMode}";
+    s"./models/${Utils.getDefaultModel()}-${ResponseVariable}-${CategoricalMode}";
   val ModelSummaryPath = s"${SavePath}/summary.txt"
 
   def printModelSummary(model: LinearRegressionModel) = {
@@ -135,5 +135,17 @@ package object Utils {
     println(toWriteString)*/
 
     pw.close()
+  }
+
+  def getDefaultModel() = {
+    Utils.DefaultModel
+  }
+
+  def setDefaultModel(newModel: String) = {
+    Utils.DefaultModel = newModel
+  }
+
+  def getSavePath() = {
+    s"./models/${Utils.getDefaultModel()}-${Utils.ResponseVariable}-${Utils.CategoricalMode}";
   }
 }

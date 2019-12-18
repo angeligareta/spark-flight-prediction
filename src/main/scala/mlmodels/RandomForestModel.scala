@@ -13,7 +13,9 @@ import preprocess.PreProcessDataset
 import tuning.HyperparameterTuning
 
 object RandomForestModel {
-  val RandomForestModelPath = Utils.SavePath + "/random_forest"
+  def getRandomForestPath() = {
+    s"${Utils.getSavePath()}/random_forest";
+  }
 
   def trainAndGetModel(trainingData: DataFrame): RandomForestRegressionModel = {
     val pipelineStages = PreProcessDataset.getFeaturesPipelineStages()
@@ -60,8 +62,8 @@ object RandomForestModel {
 
     // Save best model
     randomForestModel.write.overwrite
-      .save(RandomForestModelPath)
-    println(s"Model saved on ${RandomForestModelPath}")
+      .save(getRandomForestPath())
+    println(s"Model saved on ${getRandomForestPath()}")
 
     randomForestModel;
   }
@@ -81,7 +83,7 @@ object RandomForestModel {
     // First try to load random forest from path.
     try {
       randomForestModel =
-        RandomForestRegressionModel.load(RandomForestModelPath)
+        RandomForestRegressionModel.load(getRandomForestPath())
       println("Loading Model from file...")
 
     }

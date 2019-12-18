@@ -115,6 +115,10 @@ object ArrDelayPredictor {
         }
       }
 
+      if (interactiveMode) {
+        Utils.setDefaultModel(mlModelSelected)
+      }
+
       mlModelSelected match {
         case "lr" => {
           println("Linear regression")
