@@ -36,7 +36,8 @@ object DecisionTreeModel {
 
     // We use a ParamGridBuilder to construct a grid of parameters to search over.
     val paramGrid = new ParamGridBuilder()
-    //.addGrid(dt.maxDepth, Array(5, 7))
+      .addGrid(dt.maxDepth, Array(5, 7, 9))
+      .addGrid(dt.maxBins, Array(7500, 10000))
       .build()
 
     // Cross Validator will contribute to a better hyperparameter tuning

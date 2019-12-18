@@ -13,8 +13,8 @@ import preprocess.PreProcessDataset
   */
 object ArrDelayPredictor {
 
-  val MergedDatasetPath = Utils.SavePath + "/merged_dataset"
-  val MergedPreprocessedDatasetPath = Utils.SavePath + "/merged_processed_dataset"
+  val MergedDatasetPath = Utils.DatasetPath + "/merged_dataset"
+  val MergedPreprocessedDatasetPath = Utils.DatasetPath + "/merged_processed_dataset"
 
   def main(args: Array[String]) {
     try {
@@ -95,7 +95,7 @@ object ArrDelayPredictor {
       datasetsDF.cache()
 
       // Execute ML model by choice of user
-      val supportedMlModels = Array("lr, dt, rf");
+      val supportedMlModels = Array("lr", "dt", "rf");
       var mlModelSelected = if (interactiveMode) "" else Utils.DefaultModel;
 
       // If interactive mode, allow user to select a custom machine learning technique
