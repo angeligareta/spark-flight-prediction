@@ -1,0 +1,8 @@
+mse on test data = 305.3045498930688
+rmse on test data = 17.472966259140684
+r2 on test data = 0.7591772157798264
+mae on test data = 10.56845833474851
+SELECTED NUM TREES
+20
+SELECTED MAX DEPTH
+5

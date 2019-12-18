@@ -2,6 +2,9 @@
 # Created by https://www.gitignore.io/api/scala,spark,intellij,apachehadoop,intellij+all,intellij+iml
 # Edit at https://www.gitignore.io/?templates=scala,spark,intellij,apachehadoop,intellij+all,intellij+iml
 
+### Dataset folder: this will include the dataset that you want to load.
+dataset/
+
 ### ApacheHadoop ###
 *.iml
 *.ipr
@@ -335,6 +338,5 @@ $RECYCLE.BIN/
 # For SBT
 .jvmopts
 
-models
 
 # End of https://www.gitignore.io/api/scala,spark,intellij,apachehadoop,intellij+all,intellij+iml
