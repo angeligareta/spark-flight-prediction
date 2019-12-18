@@ -39,6 +39,6 @@ After executing linear regression, random forest and decision tree machine learn
 - MaxDepth: As maximum depth of the model we chose 5, 7 and 9 as possible values.
 
 With that list of paramters, the model had to do a training process of 6 steps, each one for the different combinations of parameters. After that, the result was represented in the following table:
-![Conclusions](images/conclusions.JPG))
+![Conclusions](images/conclusions.JPG)
 
 As we can see, with the process of hyperparameter tuning we increased the R2 to value 0.85 and decreased the Mean Squared Error to 181.144.
