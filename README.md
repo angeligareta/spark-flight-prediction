@@ -9,7 +9,7 @@ For achieving the objective of the project we are going to use the data collecte
 The application has been developed in scala programming language using Spark API for scala. Apart from the open-source build tool sbt has been used, so it can be more easily executed.
 
 In order to run the application, the following commands should be executed. 
-![Commands to execute](images/commands.jpg)
+![Commands to execute](images/commands.png)
 
 The main object ArrDelayPredictorwill be executed with run. The commands available for ArrDelayPredictor are:
 - **Path To Data:** Path where the input files would be located.  It can accept a single dataset or multiple onesthrough the path of a folder.
