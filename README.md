@@ -1,7 +1,11 @@
-# Prediction in Arrival Time
+<h1 align="center">Prediction in Flights Arrival Time</h1>
+<p align="center">
+  <img alt="UPM" src="https://img.shields.io/badge/EIT%20Digital-UPM-blue?style=flat-square">
+  <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/angeligareta/SparkFlightPrediction?style=flat-square">
+</p>
 
 ## Objective
-The objective of this project is to predict the arrival delay of plane landings, given a set of variables.  We will extract the feature data from different files containing the flight information of all the USA’s flights between 1987 and 2008.
+The objective of this project is to predict the arrival delay of plane landings, given a set of variables. We will extract the feature data from different files containing the flight information of all the USA’s flights between 1987 and 2008.
 
 For achieving the objective of the project we are going to use the data collected by the national [Bureau of transportation](http://stat-computing.org/dataexpo/2009/the-data.html) statistics, an American public organisation responsible for collecting information about commercial flights.  The period of time covered by this data is 22 years, from 1987 to 2008.
 
