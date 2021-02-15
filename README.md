@@ -1,7 +1,9 @@
 <h1 align="center">Prediction in Flights Arrival Time</h1>
+<h4 align="center">Assignment for Cloud Computing And Big Data Ecosystems Design subject of the EIT Digital data science master at <a href="https://www.upm.es/">UPM</a></h4>
 <p align="center">
   <img alt="UPM" src="https://img.shields.io/badge/EIT%20Digital-UPM-blue?style=flat-square">
-  <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/angeligareta/SparkFlightPrediction?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/angeligareta/spark-flight-prediction?style=flat-square" />
+  <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/angeligareta/spark-flight-prediction?style=flat-square">
 </p>
 
 ## Objective
